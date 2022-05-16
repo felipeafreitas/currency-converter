@@ -1,48 +1,61 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Country } from "../../models/country";
+
+type SelectedCountry = {
+  amount: number;
+  currency: string;
+  symbol: string;
+  name: string;
+};
 
 export interface CounterState {
-  firstValue: {
-    amount: number;
-    currency: string;
-  };
-  secondValue: {
-    amount: number;
-    currency: string;
-  };
+  first: SelectedCountry;
+  second: SelectedCountry;
 }
 
 const initialState: CounterState = {
-  firstValue: {
+  first: {
+    name: "",
     amount: 0,
     currency: "",
+    symbol: "",
   },
-  secondValue: {
+  second: {
+    name: "",
     amount: 0,
     currency: "",
+    symbol: "",
   },
+};
+
+type SetAmount = {
+  order: "first" | "second";
+  amount: number;
+};
+
+type SetCurrency = {
+  order: "first" | "second";
+  country: Country;
 };
 
 export const counterSlice = createSlice({
   name: "counter",
   initialState,
   reducers: {
-    setAmount: (state) => {
-      // Redux Toolkit allows us to write "mutating" logic in reducers. It
-      // doesn't actually mutate the state because it uses the Immer library,
-      // which detects changes to a "draft state" and produces a brand new
-      // immutable state based off those changes
-      state.value += 1;
+    setAmount: (state, action: PayloadAction<SetAmount>) => {
+      state[action.payload.order].amount = action.payload.amount;
     },
-    setCurrency: (state) => {
-      return;
+    setCurrency: (state, action: PayloadAction<SetCurrency>) => {
+      state[action.payload.order].currency = action.payload.country.currencies;
+      state[action.payload.order].symbol = action.payload.country.;
+      state[action.payload.order].name = action.payload.country.name;
     },
     switchValues: (state) => {
-      return;
+      [state.first, state.second] = [state.second, state.first];
     },
   },
 });
 
-// Action creators are generated for each case reducer function
 export const { setAmount, setCurrency, switchValues } = counterSlice.actions;
 
 export default counterSlice.reducer;

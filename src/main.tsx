@@ -9,7 +9,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
       <CssBaseline />
+      <App />
     </Provider>
-    <App />
   </React.StrictMode>
 );

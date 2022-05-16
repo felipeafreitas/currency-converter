@@ -1,36 +1,17 @@
-import {
-  InputAdornment,
-  OutlinedInput,
-} from "@mui/material";
-import { useState } from "react";
+import { InputAdornment, OutlinedInput } from "@mui/material";
 
-const currencies = [
-  {
-    value: "USD",
-    label: "$",
-  },
-  {
-    value: "EUR",
-    label: "€",
-  },
-  {
-    value: "BTC",
-    label: "฿",
-  },
-  {
-    value: "JPY",
-    label: "¥",
-  },
-];
+type AmountInput = {
+  amount: number;
+  symbol: string;
+};
 
-function AmountInput() {
-  const [currency, setCurrency] = useState("EUR");
-
+function AmountInput({ amount, symbol }: AmountInput) {
   return (
     <OutlinedInput
-      id="outlined-adornment-amount"
-      startAdornment={<InputAdornment position="start">$</InputAdornment>}
-      label="Amount"
+      startAdornment={
+        <InputAdornment position="start">{symbol}</InputAdornment>
+      }
+      value={amount}
     />
   );
 }
