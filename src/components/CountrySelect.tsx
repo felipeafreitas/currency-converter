@@ -22,21 +22,35 @@ export default function CountrySelect({
 }: CountrySelect) {
   const dispatch = useDispatch();
 
+  const getCurrencyAbbreviation = (country: Country) =>
+    Object.getOwnPropertyNames(country.currencies)[0];
+
   const handleChange = (e: SelectChangeEvent) => {
     const selectedCountry = countries.find(
       (country) => country.name.common === e.target.value
     );
 
-    dispatch(setCurrency({ country: selectedCountry, order }));
+    if (!selectedCountry) {
+      return;
+    }
+
+    const currencyAbbreviation = getCurrencyAbbreviation(selectedCountry);
+
+    dispatch(
+      setCurrency({
+        currency: currencyAbbreviation,
+        name: selectedCountry.name.common,
+        order: order,
+        symbol: selectedCountry.currencies[currencyAbbreviation].symbol,
+      })
+    );
   };
 
   return (
-    <Select value={value} onChange={handleChange} defaultValue="">
+    <Select value={value} onChange={handleChange} defaultValue="" fullWidth>
       {countries.map((country, index) => (
         <MenuItem value={country.name.common} key={country.name.common}>
-          {`${country.flag} ${
-            Object.getOwnPropertyNames(country.currencies)[0]
-          }`}
+          {`${country.flag} ${getCurrencyAbbreviation(country)}`}
         </MenuItem>
       ))}
     </Select>

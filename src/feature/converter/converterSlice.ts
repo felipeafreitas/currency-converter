@@ -8,54 +8,66 @@ type SelectedCountry = {
   name: string;
 };
 
-export interface CounterState {
+export interface ConverterState {
   first: SelectedCountry;
   second: SelectedCountry;
+  rates: {
+    [key: string]: number;
+  };
 }
 
-const initialState: CounterState = {
+const initialState: ConverterState = {
+  rates: {},
   first: {
-    name: "",
-    amount: 0,
-    currency: "",
-    symbol: "",
+    name: "Brazil",
+    amount: 1,
+    currency: "BRL",
+    symbol: "R$",
   },
   second: {
-    name: "",
-    amount: 0,
-    currency: "",
-    symbol: "",
+    name: "United States",
+    amount: 1,
+    currency: "USD",
+    symbol: "$",
   },
 };
 
 type SetAmount = {
   order: "first" | "second";
-  amount: number;
-};
+} & Pick<SelectedCountry, "amount">;
 
 type SetCurrency = {
   order: "first" | "second";
-  country: Country;
+} & Omit<SelectedCountry, "amount">;
+
+type SetRates = {
+  rates: {
+    [key: string]: number;
+  };
 };
 
-export const counterSlice = createSlice({
-  name: "counter",
+export const converterSlice = createSlice({
+  name: "converter",
   initialState,
   reducers: {
     setAmount: (state, action: PayloadAction<SetAmount>) => {
       state[action.payload.order].amount = action.payload.amount;
     },
     setCurrency: (state, action: PayloadAction<SetCurrency>) => {
-      state[action.payload.order].currency = action.payload.country.currencies;
-      state[action.payload.order].symbol = action.payload.country.;
-      state[action.payload.order].name = action.payload.country.name;
+      state[action.payload.order].currency = action.payload.currency;
+      state[action.payload.order].symbol = action.payload.symbol;
+      state[action.payload.order].name = action.payload.name;
     },
     switchValues: (state) => {
       [state.first, state.second] = [state.second, state.first];
     },
+    setRates: (state, action: PayloadAction<SetRates>) => {
+      state.rates = action.payload.rates;
+    },
   },
 });
 
-export const { setAmount, setCurrency, switchValues } = counterSlice.actions;
+export const { setAmount, setCurrency, switchValues, setRates } =
+  converterSlice.actions;
 
-export default counterSlice.reducer;
+export default converterSlice.reducer;
