@@ -8,6 +8,12 @@ type LatestRates = {
   success: boolean;
 };
 
+type TimeSeriesParams = {
+  currency: string;
+  startDate: string;
+  endDate: string;
+};
+
 export const exchangeRatesApi = createApi({
   reducerPath: "exchangeRatesApi",
   baseQuery: fetchBaseQuery({ baseUrl: "https://api.exchangerate.host/" }),
@@ -15,7 +21,12 @@ export const exchangeRatesApi = createApi({
     getLatestRate: builder.query<any, string>({
       query: (currency) => `/latest?base=${currency}`,
     }),
+    getTimeseriesRate: builder.query<any, TimeSeriesParams>({
+      query: ({ currency, startDate, endDate }) =>
+        `/timeseries?base=${currency}&start_date=${startDate}&end_date=${endDate}`,
+    }),
   }),
 });
 
-export const { useGetLatestRateQuery } = exchangeRatesApi;
+export const { useGetLatestRateQuery, useGetTimeseriesRateQuery } =
+  exchangeRatesApi;

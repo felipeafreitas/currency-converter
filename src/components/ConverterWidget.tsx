@@ -4,8 +4,14 @@ import {
   CircularProgress,
   Grid,
   IconButton,
+  Stack,
   Typography,
+  Button,
+  ButtonBase,
+  ButtonGroup,
 } from "@mui/material";
+
+import { Chart } from "react-chartjs-2";
 
 import CountrySelect from "../components/CountrySelect";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
@@ -15,10 +21,18 @@ import { useSelector } from "react-redux";
 import { useGetCountriesQuery } from "../services/countriesApi";
 import ThemeToggle from "./ThemeToggle";
 import { Country } from "../models/country";
-import { useGetLatestRateQuery } from "../services/exchangeRatesApi";
+import {
+  useGetLatestRateQuery,
+  useGetTimeseriesRateQuery,
+} from "../services/exchangeRatesApi";
 import { setRates } from "../feature/converter/converterSlice";
+import { useEffect, useState } from "react";
+
+type Interval = "1D" | "1W" | "1M" | "1Y" | "5Y";
 
 function ConverterWidget() {
+  const [interval, setInterval] = useState<Interval>("1Y");
+  const [chartData, setChartData] = useState();
   const { first, second } = useSelector((state: RootState) => state.converter);
 
   const { data: countriesData, isLoading: countriesDataIsLoading } =
@@ -29,7 +43,43 @@ function ConverterWidget() {
   const { data: ratesData, isLoading: rateDataIsLoading } =
     useGetLatestRateQuery(first.currency);
 
-  if (countriesDataIsLoading || rateDataIsLoading) return <CircularProgress />;
+  const endDate = new Date().toISOString().split("T")[0];
+  const startDate = new Date();
+  startDate
+    .setFullYear(startDate.getFullYear() - 1)
+    .toISOString()
+    .split("T")[0];
+
+  const { data: timeseriesRate, isLoading: timeseriesRateIsLoading } =
+    useGetTimeseriesRateQuery({
+      currency: first.currency,
+      startDate,
+      endDate,
+    });
+
+  useEffect(() => {
+    if (timeseriesRate) {
+      setChartData({
+        labels: [].map((crypto) => crypto.name),
+        datasets: [
+          {
+            label: "Price in USD",
+            data: [].map((crypto) => crypto.priceUsd),
+            backgroundColor: [
+              "#ffbb11",
+              "#ecf0f1",
+              "#50AF95",
+              "#f3ba2f",
+              "#2a71d0",
+            ],
+          },
+        ],
+      });
+    }
+  }, [timeseriesRate]);
+
+  if (countriesDataIsLoading || rateDataIsLoading || timeseriesRateIsLoading)
+    return <CircularProgress />;
 
   return (
     <Card sx={{ minWidth: 600 }}>
@@ -95,6 +145,30 @@ function ConverterWidget() {
               order="second"
             />
           </Grid>
+        </Grid>
+        <Grid sx={{ mt: 5 }}>
+          <ButtonGroup variant="outlined" fullWidth color="info">
+            <Button onClick={() => setInterval("1D")}>1D</Button>
+            <Button onClick={() => setInterval("1W")}>1W</Button>
+            <Button onClick={() => setInterval("1M")}>1M</Button>
+            <Button onClick={() => setInterval("1Y")}>1Y</Button>
+            <Button onClick={() => setInterval("5Y")}>5Y</Button>
+          </ButtonGroup>
+          <Chart
+            data={chartData}
+            options={{
+              plugins: {
+                title: {
+                  display: true,
+                  text: "Cryptocurrency prices",
+                },
+                legend: {
+                  display: true,
+                  position: "bottom",
+                },
+              },
+            }}
+          />
         </Grid>
       </CardContent>
     </Card>
