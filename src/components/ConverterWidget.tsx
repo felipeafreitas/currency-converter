@@ -4,14 +4,12 @@ import {
   CircularProgress,
   Grid,
   IconButton,
-  Stack,
   Typography,
   Button,
-  ButtonBase,
   ButtonGroup,
 } from "@mui/material";
 
-import { Chart } from "react-chartjs-2";
+import { Bar, Chart } from "react-chartjs-2";
 
 import CountrySelect from "../components/CountrySelect";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
@@ -27,12 +25,13 @@ import {
 } from "../services/exchangeRatesApi";
 import { setRates } from "../feature/converter/converterSlice";
 import { useEffect, useState } from "react";
+import { ChartData } from "chart.js";
 
 type Interval = "1D" | "1W" | "1M" | "1Y" | "5Y";
 
 function ConverterWidget() {
   const [interval, setInterval] = useState<Interval>("1Y");
-  const [chartData, setChartData] = useState();
+  const [chartData, setChartData] = useState<ChartData>({});
   const { first, second } = useSelector((state: RootState) => state.converter);
 
   const { data: countriesData, isLoading: countriesDataIsLoading } =
@@ -43,35 +42,38 @@ function ConverterWidget() {
   const { data: ratesData, isLoading: rateDataIsLoading } =
     useGetLatestRateQuery(first.currency);
 
-  const endDate = new Date().toISOString().split("T")[0];
+  const endDate = new Date();
   const startDate = new Date();
-  startDate
-    .setFullYear(startDate.getFullYear() - 1)
-    .toISOString()
-    .split("T")[0];
+  startDate.setFullYear(startDate.getFullYear() - 1);
+
+  const convertDate = (date: Date) => date.toISOString().split("T")[0];
 
   const { data: timeseriesRate, isLoading: timeseriesRateIsLoading } =
     useGetTimeseriesRateQuery({
       currency: first.currency,
-      startDate,
-      endDate,
+      startDate: convertDate(startDate),
+      endDate: convertDate(endDate),
     });
 
   useEffect(() => {
     if (timeseriesRate) {
+      const timeseriesArray = [];
+      for (const date in timeseriesRate.rates) {
+        timeseriesArray.push(timeseriesRate.rates[date][second.currency]);
+      }
       setChartData({
-        labels: [].map((crypto) => crypto.name),
+        // labels: ["test"],
         datasets: [
           {
-            label: "Price in USD",
-            data: [].map((crypto) => crypto.priceUsd),
-            backgroundColor: [
-              "#ffbb11",
-              "#ecf0f1",
-              "#50AF95",
-              "#f3ba2f",
-              "#2a71d0",
-            ],
+            // label: "Price in USD",
+            data: timeseriesArray,
+            // backgroundColor: [
+            //   "#ffbb11",
+            //   "#ecf0f1",
+            //   "#50AF95",
+            //   "#f3ba2f",
+            //   "#2a71d0",
+            // ],
           },
         ],
       });
@@ -154,21 +156,24 @@ function ConverterWidget() {
             <Button onClick={() => setInterval("1Y")}>1Y</Button>
             <Button onClick={() => setInterval("5Y")}>5Y</Button>
           </ButtonGroup>
-          <Chart
-            data={chartData}
-            options={{
-              plugins: {
-                title: {
-                  display: true,
-                  text: "Cryptocurrency prices",
-                },
-                legend: {
-                  display: true,
-                  position: "bottom",
-                },
-              },
-            }}
-          />
+          {/* {chartData && ( */}
+            <Chart
+              type="line"
+              data={chartData}
+              // options={{
+              //   plugins: {
+              //     title: {
+              //       display: true,
+              //       text: "Cryptocurrency prices",
+              //     },
+              //     legend: {
+              //       display: true,
+              //       position: "bottom",
+              //     },
+              //   },
+              // }}
+            />
+          {/* )} */}
         </Grid>
       </CardContent>
     </Card>
