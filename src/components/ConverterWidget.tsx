@@ -8,6 +8,7 @@ import {
   Button,
   ButtonGroup,
 } from "@mui/material";
+import "chart.js/auto";
 
 import { Bar, Chart } from "react-chartjs-2";
 
@@ -31,7 +32,7 @@ type Interval = "1D" | "1W" | "1M" | "1Y" | "5Y";
 
 function ConverterWidget() {
   const [interval, setInterval] = useState<Interval>("1Y");
-  const [chartData, setChartData] = useState<ChartData>({});
+  const [chartData, setChartData] = useState({});
   const { first, second } = useSelector((state: RootState) => state.converter);
 
   const { data: countriesData, isLoading: countriesDataIsLoading } =
@@ -58,22 +59,19 @@ function ConverterWidget() {
   useEffect(() => {
     if (timeseriesRate) {
       const timeseriesArray = [];
+      const dates = [];
       for (const date in timeseriesRate.rates) {
+        dates.push(date);
         timeseriesArray.push(timeseriesRate.rates[date][second.currency]);
       }
       setChartData({
-        // labels: ["test"],
+        labels: dates,
         datasets: [
           {
-            // label: "Price in USD",
             data: timeseriesArray,
-            // backgroundColor: [
-            //   "#ffbb11",
-            //   "#ecf0f1",
-            //   "#50AF95",
-            //   "#f3ba2f",
-            //   "#2a71d0",
-            // ],
+            fill: false,
+            borderColor: "rgb(75, 192, 192)",
+            tension: 0.1,
           },
         ],
       });
@@ -156,24 +154,33 @@ function ConverterWidget() {
             <Button onClick={() => setInterval("1Y")}>1Y</Button>
             <Button onClick={() => setInterval("5Y")}>5Y</Button>
           </ButtonGroup>
-          {/* {chartData && ( */}
+          {chartData && (
             <Chart
               type="line"
               data={chartData}
-              // options={{
-              //   plugins: {
-              //     title: {
-              //       display: true,
-              //       text: "Cryptocurrency prices",
-              //     },
-              //     legend: {
-              //       display: true,
-              //       position: "bottom",
-              //     },
-              //   },
-              // }}
+              options={{
+                plugins: {
+                  title: {
+                    display: false,
+                  },
+                  legend: {
+                    display: false,
+                  },
+                  tooltip: {
+                    enabled: true,
+                  },
+                },
+                scales: {
+                  xAxis: {
+                    display: false,
+                  },
+                  yAxis: {
+                    display: false,
+                  },
+                },
+              }}
             />
-          {/* )} */}
+          )}
         </Grid>
       </CardContent>
     </Card>
