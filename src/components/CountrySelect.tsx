@@ -1,7 +1,3 @@
-import * as React from "react";
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import Autocomplete from "@mui/material/Autocomplete";
 import { Country } from "../models/country";
 import { useDispatch } from "react-redux";
 import { setCurrency } from "../feature/converter/converterSlice";
@@ -18,7 +14,6 @@ export default function CountrySelect({
   value,
   order,
   countries,
-  currency,
 }: CountrySelect) {
   const dispatch = useDispatch();
 
@@ -48,7 +43,7 @@ export default function CountrySelect({
 
   return (
     <Select value={value} onChange={handleChange} defaultValue="" fullWidth>
-      {countries.map((country, index) => (
+      {countries?.map((country) => (
         <MenuItem value={country.name.common} key={country.name.common}>
           {`${country.flag} ${getCurrencyAbbreviation(country)}`}
         </MenuItem>
