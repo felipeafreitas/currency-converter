@@ -7,16 +7,17 @@ import {
   Typography,
   Button,
   ButtonGroup,
+  Box,
 } from "@mui/material";
 import "chart.js/auto";
 
-import { Bar, Chart } from "react-chartjs-2";
+import { Chart } from "react-chartjs-2";
 
 import CountrySelect from "../components/CountrySelect";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
 import AmountInput from "../components/AmountInput";
 import { RootState } from "../store";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useGetCountriesQuery } from "../services/countriesApi";
 import ThemeToggle from "./ThemeToggle";
 import { Country } from "../models/country";
@@ -24,46 +25,50 @@ import {
   useGetLatestRateQuery,
   useGetTimeseriesRateQuery,
 } from "../services/exchangeRatesApi";
-import { setRates } from "../feature/converter/converterSlice";
 import { useEffect, useState } from "react";
-import { ChartData } from "chart.js";
+import { convertDate } from "../utils/convertDate";
+import { Intervals } from "../core/intervals";
+import { startDate } from "../utils/startDate";
+import { formatChartData } from "../utils/formatChartData";
+import { switchValues } from "../feature/converter/converterSlice";
 
-type Interval = "1D" | "1W" | "1M" | "1Y" | "5Y";
+const timeButtons: Intervals[] = ["1D", "1W", "1M", "1Y", "5Y"];
 
 function ConverterWidget() {
-  const [interval, setInterval] = useState<Interval>("1Y");
+  const [interval, setInterval] = useState<Intervals>("1Y");
   const [chartData, setChartData] = useState({});
   const { first, second } = useSelector((state: RootState) => state.converter);
+  const dispatch = useDispatch();
 
   const { data: countriesData, isLoading: countriesDataIsLoading } =
     useGetCountriesQuery();
 
   const filteredData = countriesData?.filter((country) => country.currencies);
 
-  const { data: ratesData, isLoading: rateDataIsLoading } =
-    useGetLatestRateQuery(first.currency);
+  const {
+    data: ratesData,
+    isLoading: rateDataIsLoading,
+    isFetching: ratesDataIsFetching,
+  } = useGetLatestRateQuery(first.currency);
 
   const endDate = new Date();
-  const startDate = new Date();
-  startDate.setFullYear(startDate.getFullYear() - 1);
 
-  const convertDate = (date: Date) => date.toISOString().split("T")[0];
-
-  const { data: timeseriesRate, isLoading: timeseriesRateIsLoading } =
-    useGetTimeseriesRateQuery({
-      currency: first.currency,
-      startDate: convertDate(startDate),
-      endDate: convertDate(endDate),
-    });
+  const {
+    data: timeseriesRate,
+    isLoading: timeseriesRateIsLoading,
+    isFetching: timeseriesRateIsFetching,
+  } = useGetTimeseriesRateQuery({
+    currency: first.currency,
+    startDate: convertDate(startDate(interval)),
+    endDate: convertDate(endDate),
+  });
 
   useEffect(() => {
-    if (timeseriesRate) {
-      const timeseriesArray = [];
-      const dates = [];
-      for (const date in timeseriesRate.rates) {
-        dates.push(date);
-        timeseriesArray.push(timeseriesRate.rates[date][second.currency]);
-      }
+    if (timeseriesRate?.success) {
+      const { timeseriesArray, dates } = formatChartData(
+        timeseriesRate,
+        second.currency
+      );
       setChartData({
         labels: dates,
         datasets: [
@@ -76,7 +81,7 @@ function ConverterWidget() {
         ],
       });
     }
-  }, [timeseriesRate]);
+  }, [timeseriesRate, second]);
 
   if (countriesDataIsLoading || rateDataIsLoading || timeseriesRateIsLoading)
     return <CircularProgress />;
@@ -119,7 +124,11 @@ function ConverterWidget() {
           </Grid>
         </Grid>
         <Grid>
-          <IconButton sx={{ ml: 1 }} color="inherit">
+          <IconButton
+            sx={{ ml: 1 }}
+            color="inherit"
+            onClick={() => dispatch(switchValues())}
+          >
             <ImportExportIcon />
           </IconButton>
         </Grid>
@@ -132,7 +141,11 @@ function ConverterWidget() {
         >
           <Grid item xs={8}>
             <AmountInput
-              amount={first.amount * ratesData.rates[second.currency]}
+              amount={
+                ratesDataIsFetching
+                  ? "..."
+                  : first.amount * ratesData?.rates[second.currency]
+              }
               symbol={second.symbol}
               order="second"
             />
@@ -148,13 +161,29 @@ function ConverterWidget() {
         </Grid>
         <Grid sx={{ mt: 5 }}>
           <ButtonGroup variant="outlined" fullWidth color="info">
-            <Button onClick={() => setInterval("1D")}>1D</Button>
-            <Button onClick={() => setInterval("1W")}>1W</Button>
-            <Button onClick={() => setInterval("1M")}>1M</Button>
-            <Button onClick={() => setInterval("1Y")}>1Y</Button>
-            <Button onClick={() => setInterval("5Y")}>5Y</Button>
+            {timeButtons.map((value) => (
+              <Button
+                key={value}
+                variant={value === interval ? "contained" : "outlined"}
+                onClick={() => setInterval(value)}
+              >
+                {value}
+              </Button>
+            ))}
           </ButtonGroup>
-          {chartData && (
+          {timeseriesRateIsFetching ? (
+            <Box
+              sx={{
+                width: 568,
+                height: 284,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          ) : (
             <Chart
               type="line"
               data={chartData}

@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { setAmount } from "../feature/converter/converterSlice";
 
 type AmountInput = {
-  amount: number;
+  amount: number | string;
   symbol: string;
   order: "first" | "second";
 };
@@ -11,11 +11,13 @@ type AmountInput = {
 function AmountInput({ amount, symbol, order }: AmountInput) {
   const dispatch = useDispatch();
 
-  const onChange = (e) =>
+  const onChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+  ) =>
     dispatch(
       setAmount({
         order: order,
-        amount: e.target.value,
+        amount: Number(e.target.value.replace(/[^0-9.]/g, "")),
       })
     );
 
