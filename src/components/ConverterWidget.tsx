@@ -4,14 +4,7 @@ import {
   CircularProgress,
   Grid,
   IconButton,
-  Typography,
-  Button,
-  ButtonGroup,
-  Box,
 } from "@mui/material";
-import "chart.js/auto";
-
-import { Chart } from "react-chartjs-2";
 
 import CountrySelect from "../components/CountrySelect";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
@@ -19,7 +12,6 @@ import AmountInput from "../components/AmountInput";
 import { RootState } from "../store";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetCountriesQuery } from "../services/countriesApi";
-import ThemeToggle from "./ThemeToggle";
 import { Country } from "../models/country";
 import {
   useGetLatestRateQuery,
@@ -31,12 +23,13 @@ import { Intervals } from "../core/intervals";
 import { startDate } from "../utils/startDate";
 import { formatChartData } from "../utils/formatChartData";
 import { switchValues } from "../feature/converter/converterSlice";
-
-const timeButtons: Intervals[] = ["1D", "1W", "1M", "1Y", "5Y"];
+import { ChartData } from "chart.js/auto";
+import RateChart from "./RateChart";
+import Header from "./Header";
 
 function ConverterWidget() {
   const [interval, setInterval] = useState<Intervals>("1Y");
-  const [chartData, setChartData] = useState({});
+  const [chartData, setChartData] = useState<ChartData>({} as ChartData);
   const { first, second } = useSelector((state: RootState) => state.converter);
   const dispatch = useDispatch();
 
@@ -89,17 +82,7 @@ function ConverterWidget() {
   return (
     <Card sx={{ minWidth: 600 }}>
       <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        <Grid
-          container
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Typography gutterBottom variant="h5" component="div">
-            Currency Converter
-          </Typography>
-          <ThemeToggle />
-        </Grid>
+        <Header />
         <Grid
           container
           direction="row"
@@ -159,58 +142,12 @@ function ConverterWidget() {
             />
           </Grid>
         </Grid>
-        <Grid sx={{ mt: 5 }}>
-          <ButtonGroup variant="outlined" fullWidth color="info">
-            {timeButtons.map((value) => (
-              <Button
-                key={value}
-                variant={value === interval ? "contained" : "outlined"}
-                onClick={() => setInterval(value)}
-              >
-                {value}
-              </Button>
-            ))}
-          </ButtonGroup>
-          {timeseriesRateIsFetching ? (
-            <Box
-              sx={{
-                width: 568,
-                height: 284,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <CircularProgress />
-            </Box>
-          ) : (
-            <Chart
-              type="line"
-              data={chartData}
-              options={{
-                plugins: {
-                  title: {
-                    display: false,
-                  },
-                  legend: {
-                    display: false,
-                  },
-                  tooltip: {
-                    enabled: true,
-                  },
-                },
-                scales: {
-                  xAxis: {
-                    display: false,
-                  },
-                  yAxis: {
-                    display: false,
-                  },
-                },
-              }}
-            />
-          )}
-        </Grid>
+        <RateChart
+          chartData={chartData}
+          interval={interval}
+          setInterval={setInterval}
+          timeseriesRateIsFetching={timeseriesRateIsFetching}
+        />
       </CardContent>
     </Card>
   );

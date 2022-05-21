@@ -17,7 +17,7 @@ function AmountInput({ amount, symbol, order }: AmountInput) {
     dispatch(
       setAmount({
         order: order,
-        amount: Number(e.target.value.replace(/[^0-9.]/g, "")),
+        amount: parseInt(e.target.value.replace(/[^0-9.]/g, ""), 10),
       })
     );
 
