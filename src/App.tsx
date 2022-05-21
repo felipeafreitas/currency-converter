@@ -1,8 +1,4 @@
-import {
-  createTheme,
-  Grid,
-  ThemeProvider,
-} from "@mui/material";
+import { createTheme, Grid, ThemeProvider } from "@mui/material";
 import { createContext, useMemo, useState } from "react";
 
 import ConverterWidget from "./components/ConverterWidget";

@@ -1,4 +1,7 @@
-export const formatChartData = (timeseriesRate: unknown, currency: string) => {
+export const formatChartData = (
+  timeseriesRate: { [key: string]: any },
+  currency: string
+) => {
   const timeseriesArray = [];
   const dates = [];
 
